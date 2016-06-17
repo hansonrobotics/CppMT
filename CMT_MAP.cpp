@@ -15,17 +15,17 @@ std::vector<cmt_message> CMTMAP::process_map(const Mat im_gray, const int factor
 std::vector<cmt_message> cmt_messages;
 queue_tracker.clear();
 
-//separate();
-//
-//boost::thread thread_1 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_1);
-//boost::thread thread_2 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_2);
-//boost::thread thread_3 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_3);
-//boost::thread thread_4 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_4);
-//
-//thread_4.join();
-//thread_3.join();
-//thread_2.join();
-//thread_1.join();
+separate();
+
+boost::thread thread_1 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_1);
+boost::thread thread_2 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_2);
+boost::thread thread_3 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_3);
+boost::thread thread_4 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_4);
+
+thread_4.join();
+thread_3.join();
+thread_2.join();
+thread_1.join();
 
 //TODO Better the merging process with update_area fucntions;
 for(std::map<std::string, std::string>::iterator v = merge.begin(); v!= merge.end(); v++)
@@ -36,7 +36,7 @@ for(std::map<std::string, std::string>::iterator v = merge.begin(); v!= merge.en
 for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); v++)
 {
   cmt_message message;
-  v->second.processFrame(im_gray, factor);
+//  v->second.processFrame(im_gray, factor);
   message.initial_active_points = v->second.num_initial_keypoints;
   message.active_points = v->second.num_active_keypoints;
   message.tracker_name = v->second.name;
