@@ -32,7 +32,7 @@ for(std::map<std::string, std::string>::iterator v = merge.begin(); v!= merge.en
 {
     queue_tracker.push_back(v->second);
 }
-
+merge.clear();
 for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); v++)
 {
   cmt_message message;
