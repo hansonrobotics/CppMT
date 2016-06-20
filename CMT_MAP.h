@@ -46,7 +46,7 @@ std::vector<cmt_message> process_map(const Mat im_gray, const int factor,std::ma
 //This one creates temp name values.
 string addtomap(const Mat img,const Rect rect);
 std::map<string, Mat> getImages();
-
+int size_map();
 std::vector<string> removeLost();
 
 std::vector<string> string_1;

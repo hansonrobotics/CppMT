@@ -85,7 +85,10 @@ for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); 
 
 return cmt_messages;
 }
-
+int CMTMAP::size_map()
+{
+    return cmt_.size();
+}
 std::vector<string> CMTMAP::removeLost()
 {
   //TODO this needs to be a state machines and conditions to not start deleting trackers that where started to track below threshold. So Flexiable threshold.
