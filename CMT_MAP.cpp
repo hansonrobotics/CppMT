@@ -96,8 +96,17 @@ std::vector<string> CMTMAP::removeLost()
   for(std::vector<string>::iterator v = queue_tracker.begin(); v!= queue_tracker.end(); v++)
   {
     cmt_.erase(*v);
+    face_reg.erase(*v);
   }
   return queue_tracker;
+}
+std::vector<string> CMTMAP::newFace()
+{
+    return face_registry;  //Now this is face that are validated;
+}
+void CMTMAP::clearFace()
+{
+    face_registry.clear();
 }
 
 std::map<string, Mat> CMTMAP::getImages()
@@ -112,11 +121,15 @@ std::map<string, Mat> returnImages;
 }
 string CMTMAP::addtomap(const Mat im_gray,const Rect rect)
 {
-  int tracker_num;
+  int tracker_num = 0;
   srand(time(NULL));
   //TODO Fix this to not contain conflicts going forward in previously saved faces
   //and in the files that exist here.
+
+  while (tracker_num == 0)
+  {
   tracker_num = rand() % 100000;
+  }
   std::string tracker_name = SSTR(tracker_num);
   //TODO Here we need to do a check to remove unresolved names
   cmt_[tracker_name] = cmt::CMT();
@@ -161,6 +174,9 @@ bool CMTMAP::reinforce(string name, int value)
 {
     cmt_[name].reset_decreasing_validate(value);
     cmt_[name].validated = true;
+    if (face_reg.find(name)==face_reg.end())
+        face_registry.push_back(name);
+        face_reg[name] = name; 
     return true;
 }
 void CMTMAP::separate()

@@ -37,7 +37,7 @@ private:
 std::map <string, cmt::CMT> cmt_;
 string tempname_generator();
 std::vector<string> queue_tracker;
-
+std::vector<string> face_registry;
 
 public:
 //This can be threaded in the futhre and join here without affecting functionality
@@ -48,7 +48,9 @@ string addtomap(const Mat img,const Rect rect);
 std::map<string, Mat> getImages();
 int size_map();
 std::vector<string> removeLost();
-
+std::vector<string> newFace();
+void clearFace();
+std::map<string, string> face_reg;
 std::vector<string> string_1;
 std::vector<string> string_2;
 std::vector<string> string_3;
