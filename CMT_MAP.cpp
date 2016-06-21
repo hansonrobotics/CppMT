@@ -142,7 +142,13 @@ return false;
 
 void CMTMAP::clear()
 {
-cmt_.clear();
+//Now remove the trackers just as you would.
+ queue_tracker.clear();
+for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); v++)
+{
+queue_tracker.push_back((*v).first);
+}
+
 }
 
 bool CMTMAP::validate(string name)
