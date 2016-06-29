@@ -141,7 +141,8 @@ std::vector<string> CMTMAP::lostFace()
 }
 void CMTMAP::clearFace()
 {
-    //face_registry.clear();
+    newFaces.clear();
+    lostFaces.clear();
 }
 
 std::map<string, Mat> CMTMAP::getImages()
