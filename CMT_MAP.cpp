@@ -27,12 +27,15 @@ thread_3.join();
 thread_2.join();
 thread_1.join();
 
+newFaces.clear();
+lostFaces.clear();
+
 //TODO Better the merging process with update_area fucntions;
 for(std::map<std::string, std::string>::iterator v = merge.begin(); v!= merge.end(); v++)
 {
     queue_tracker.push_back(v->second);
 }
-merge.clear();
+
 for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); v++)
 {
   cmt_message message;
@@ -70,11 +73,38 @@ for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); 
       message.tracker_lost = true;
   }
   message.validated = v->second.validated;
+  face_reg[message.tracker_name] = message.validated;
+  //Only create this if there is that index in the system.
+  bool updated = false;
+  if (face_reg_back.find(message.tracker_name)!=face_reg_back.end())
+    {
+    if (face_reg_back[message.tracker_name] != face_reg[message.tracker_name])
+    {
+        if (face_reg[message.tracker_name])
+        {
+            face_reg_back[message.tracker_name] = true;
+            face_reg[message.tracker_name] = true;
+            newFaces.push_back(message.tracker_name);
+         }
+       else
+        {
+        updated = true;
+        lostFaces.push_back(message.tracker_name);
+        face_reg_back[message.tracker_name] = false;
+        face_reg[message.tracker_name] = false;
+        }
+    }
+    }
+     //Event trigger here
   message.before_being_demoted = v->second.decreasing_validate;
 
   if(message.tracker_lost)
   {
   //TODO There needs to a logic to handle this as quickly removed trackers are not particulaly good.
+    if (!updated)
+    {
+    lostFaces.push_back(message.tracker_name);
+    }
   queue_tracker.push_back(message.tracker_name);
   }
   message.recognized = v->second.identified;
@@ -89,7 +119,7 @@ int CMTMAP::size_map()
 {
     return cmt_.size();
 }
-std::vector<string> CMTMAP::removeLost()
+void CMTMAP::removeLost()
 {
   //TODO this needs to be a state machines and conditions to not start deleting trackers that where started to track below threshold. So Flexiable threshold.
 
@@ -97,16 +127,21 @@ std::vector<string> CMTMAP::removeLost()
   {
     cmt_.erase(*v);
     face_reg.erase(*v);
+    face_reg_back.erase(*v);
   }
-  return queue_tracker;
+
 }
 std::vector<string> CMTMAP::newFace()
 {
-    return face_registry;  //Now this is face that are validated;
+    return newFaces;  //Now this is face that are validated;
+}
+std::vector<string> CMTMAP::lostFace()
+{
+    return lostFaces;  //Now this is face that are validated;
 }
 void CMTMAP::clearFace()
 {
-    face_registry.clear();
+    //face_registry.clear();
 }
 
 std::map<string, Mat> CMTMAP::getImages()
@@ -136,6 +171,8 @@ string CMTMAP::addtomap(const Mat im_gray,const Rect rect)
   cmt_[tracker_name].consensus.estimate_rotation = true;
   cmt_[tracker_name].initialize(im_gray, rect, tracker_name);
   cmt_[tracker_name].validated = false;
+  face_reg_back[tracker_name] = false;
+  face_reg[tracker_name] = false;
   return tracker_name;
 }
 
@@ -156,10 +193,11 @@ return false;
 void CMTMAP::clear()
 {
 //Now remove the trackers just as you would.
- queue_tracker.clear();
+ lostFaces.clear();
 for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); v++)
 {
-queue_tracker.push_back((*v).first);
+    if((*v).second.validated)
+    lostFaces.push_back((*v).first);
 }
 
 }
@@ -172,11 +210,12 @@ bool CMTMAP::validate(string name)
 
 bool CMTMAP::reinforce(string name, int value)
 {
+    if (cmt_.find(name)!=cmt_.end())
+    {
     cmt_[name].reset_decreasing_validate(value);
     cmt_[name].validated = true;
-    if (face_reg.find(name)==face_reg.end())
-        face_registry.push_back(name);
-        face_reg[name] = name; 
+
+    }
     return true;
 }
 void CMTMAP::separate()
