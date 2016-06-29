@@ -1,5 +1,5 @@
 #include "CMT_MAP.h"
-
+#include <algorithm>
 namespace cmt {
 void CMTMAP::process(const Mat im_gray, const int factor,std::vector<string> string_)
 {
@@ -128,6 +128,7 @@ void CMTMAP::removeLost()
     cmt_.erase(*v);
     face_reg.erase(*v);
     face_reg_back.erase(*v);
+    newFaces.erase(std::remove(newFaces.begin(), newFaces.end(), *v), newFaces.end());
   }
 
 }
