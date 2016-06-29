@@ -34,6 +34,7 @@ lostFaces.clear();
 for(std::map<std::string, std::string>::iterator v = merge.begin(); v!= merge.end(); v++)
 {
     queue_tracker.push_back(v->second);
+    lostFaces.push_back(v->second);
 }
 
 for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); v++)
@@ -138,7 +139,11 @@ std::vector<string> CMTMAP::newFace()
 }
 std::vector<string> CMTMAP::lostFace()
 {
-    return lostFaces;  //Now this is face that are validated;
+  for(std::vector<string>::iterator v = lostFaces.begin(); v!= lostFaces.end(); v++)
+  {
+    newFaces.erase(std::remove(newFaces.begin(), newFaces.end(), *v), newFaces.end());
+  }
+  return lostFaces;  //Now this is face that are validated;
 }
 void CMTMAP::clearFace()
 {
