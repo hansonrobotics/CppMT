@@ -55,23 +55,26 @@ for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); 
   if(division > ratio)
   {
   message.tracker_lost = false;
-  v->second.ratio_frames = 10; //TODO dynamic paramters.
+  v->second.ratio_frames = 10; //TODO dynamic parameters.
   }
   else
   {
       if(v->second.ratio_frames == 0)
       {
       message.tracker_lost = true;
+      std::cout<<"Lost by Lower ration for 10 frames"<<std::endl;
       }
       else
       {
       message.tracker_lost = false;
       v->second.ratio_frames = v->second.ratio_frames - 1;
+      std::cout<<"Ratio not being met"<<std::endl;
       }
   }
   if( v->second.decreasing_validate == v->second.initial_default)
   {
       message.tracker_lost = true;
+      std::cout<<"Decreasing Validated reached lower threshold"<<std::endl;
   }
   message.validated = v->second.validated;
   face_reg[message.tracker_name] = message.validated;
@@ -161,6 +164,16 @@ std::map<string, Mat> returnImages;
  }
  return returnImages;
 }
+void CMTMAP::updateArea(const Mat im_gray, cv::Rect area_, string name)
+{
+
+cmt_[name].updateArea(im_gray, area_);
+
+}
+void CMTMAP::deleteTracker(std::string name)
+{
+    cmt_.erase(name);
+}
 string CMTMAP::addtomap(const Mat im_gray,const Rect rect)
 {
   int tracker_num = 0;
@@ -206,7 +219,7 @@ for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); 
     if((*v).second.validated)
     lostFaces.push_back((*v).first);
 }
-
+cmt_.clear();
 }
 
 bool CMTMAP::validate(string name)

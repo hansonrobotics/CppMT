@@ -74,6 +74,8 @@ void separate();
 
 bool validate(string name);
 bool reinforce(string name, int value);
+void updateArea(const Mat im_gray, cv::Rect area_, string name);
+void deleteTracker(string name);
 };
 }
 
