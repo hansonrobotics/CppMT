@@ -125,7 +125,7 @@ void CMT::initialize(const Mat im_gray, const Rect rect, string tracker_name, in
     ////FILE_LOG(logDEBUG) << "CMT::initialize() return";
     initialized = true;
     counter = 3;
-    ratio_frames = 7;
+    ratio_frames = 20;
 }
 
 void CMT::updateArea(const Mat im_gray, const Rect rect)
@@ -163,34 +163,35 @@ void CMT::processFrame(Mat im_gray, int threshold) {
     vector<Point2f> points_tracked;
     vector<unsigned char> status;
 
-    //TODO To avoid deleting faces that generated small number of thresholds.
-    if(num_initial_keypoints < threshold * 2)
-    {
-        threshold = num_initial_keypoints / 2 ;
-    }
+//    //TODO To avoid deleting faces that generated small number of thresholds.
+//    if(num_initial_keypoints < threshold * 2)
+//    {
+//        threshold = num_initial_keypoints / 2 ;
+//    }
 
-    opticalflow_results = tracker.track(im_prev, im_gray, points_active, points_tracked, status, threshold);
+    //opticalflow_results =
+    tracker.track(im_prev, im_gray, points_active, points_tracked, status, threshold);
 
     //If the optical flow results are below the threshold then go to the tracker_lost. That is decrease counter. For ten instance.
 //    std::cout<<"OpticalFlow Results: "<<opticalflow_results<<std::endl;
-    if (!opticalflow_results)
-    {
-        if (threshold != 0)
-        {
-            //Now let's do some processing here.
-            if (counter == 0)
-            {
-                tracker_lost = true;
-                return;
-            }
-            else
-            {
-                tracker_lost = false;
-                counter--;
-            }
-
-        }
-    }
+//    if (!opticalflow_results)
+//    {
+//        if (threshold != 0)
+//        {
+//            //Now let's do some processing here.
+//            if (counter == 0)
+//            {
+//                tracker_lost = true;
+//               // return;
+//            }
+//            else
+//            {
+//                tracker_lost = false;
+//                counter--;
+//            }
+//
+//        }
+//    }
 
     //FILE_LOG(logDEBUG) << points_tracked.size() << " tracked points.";
 
