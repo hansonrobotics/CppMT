@@ -43,7 +43,7 @@ std::vector<string> lostFaces;
 
 public:
 //This can be threaded in the futhre and join here without affecting functionality
-std::vector<cmt_message> process_map(const Mat im_gray, const int factor,std::map<string, string> map_merge,double ratio=0.3);
+std::vector<cmt_message> process_map(const Mat im_gray, const double factor,std::map<string, string> map_merge,int frame_wait);
 //Let this one create the names and values.
 //This one creates temp name values.
 string addtomap(const Mat img,const Rect rect);

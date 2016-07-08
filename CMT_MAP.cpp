@@ -10,7 +10,7 @@ void CMTMAP::process(const Mat im_gray, const int factor,std::vector<string> str
     cmt_[*v].processFrame(im_gray, factor);
  }
 }
-std::vector<cmt_message> CMTMAP::process_map(const Mat im_gray, const int factor,std::map<std::string, std::string> merge, double ratio)
+std::vector<cmt_message> CMTMAP::process_map(const Mat im_gray, const double factor,std::map<std::string, std::string> merge, int frame_wait)
 {
 std::vector<cmt_message> cmt_messages;
 queue_tracker.clear();
@@ -51,11 +51,15 @@ for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); 
   double division = (double) message.active_points / (double)message.initial_active_points;
 
 
+//  std::cout<<"initial_active_points: "<<message.initial_active_points<<std::endl;
+//  std::cout<<"active_points: "<<message.active_points<<std::endl;
+//  std::cout<<"division: "<<division<<std::endl;
 
-  if(division > ratio)
+  if(division > factor)
   {
   message.tracker_lost = false;
-  v->second.ratio_frames = 10; //TODO dynamic parameters.
+  //std::cout<<"Frame Wait: "<<frame_wait<<std::endl;
+  v->second.ratio_frames = frame_wait; //TODO dynamic parameters.
   }
   else
   {

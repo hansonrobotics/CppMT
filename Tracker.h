@@ -10,7 +10,7 @@ class Tracker
 {
 public:
     Tracker() : thr_fb(30) {};
-    bool track(const Mat im_prev, const Mat im_gray, const vector<Point2f> & points_prev,
+    void track(const Mat im_prev, const Mat im_gray, const vector<Point2f> & points_prev,
             vector<Point2f> & points_tracked, vector<unsigned char> & status, int threshold);
 
 private:
