@@ -200,18 +200,12 @@ string CMTMAP::addtomap(const Mat im_gray,const Rect rect)
   return tracker_name;
 }
 
-bool CMTMAP::updatemapname(string tempname, int index)
+bool CMTMAP::updatemapname(string recognized, int index)
 {
-if (cmt_.find(SSTR(index)) == cmt_.end())
-{
-  cmt_[tempname].set_name(SSTR(index));
+
+  cmt_[SSTR(index)].set_name(recognized);
   return true;
-}
-else
-{
-  //TODO handle if there is a name where there is an index of a name.
-return false;
-}
+
 }
 
 void CMTMAP::clear()
