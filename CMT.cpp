@@ -5,9 +5,12 @@
 
 namespace cmt {
 
-void CMT::initialize(const Mat im_gray, const Rect rect)
+void CMT::initialize(const Mat im_gray, const Rect rect, string tracker_name, int threshold_value)
 {
-    FILE_LOG(logDEBUG) << "CMT::initialize() call";
+    initialized = false;
+    name = tracker_name;
+    threshold = threshold_value;
+    //FILE_LOG(logDEBUG) << "CMT::initialize() call";
 
     //Remember initial size
     size_initial = rect.size();
@@ -16,7 +19,7 @@ void CMT::initialize(const Mat im_gray, const Rect rect)
     im_prev = im_gray;
 
     //Compute center of rect
-    Point2f center = Point2f(rect.x + rect.width/2.0, rect.y + rect.height/2.0);
+    Point2f center = Point2f(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0);
 
     //Initialize rotated bounding box
     bb_rot = RotatedRect(center, size_initial, 0.0);
@@ -42,7 +45,7 @@ void CMT::initialize(const Mat im_gray, const Rect rect)
     {
         KeyPoint k = keypoints[i];
         Point2f pt = k.pt;
-
+//This is adding whatever is in the rect to be tracked by the system. So the most interesting points are this.
         if (pt.x > rect.x && pt.y > rect.y && pt.x < rect.br().x && pt.y < rect.br().y)
         {
             keypoints_fg.push_back(k);
@@ -78,7 +81,7 @@ void CMT::initialize(const Mat im_gray, const Rect rect)
         points_fg.push_back(keypoints_fg[i].pt);
     }
 
-    FILE_LOG(logDEBUG) << points_fg.size() << " foreground points.";
+    //FILE_LOG(logDEBUG) << points_fg.size() << " foreground points.";
 
     for (size_t i = 0; i < keypoints_bg.size(); i++)
     {
@@ -105,19 +108,92 @@ void CMT::initialize(const Mat im_gray, const Rect rect)
         classes_active = classes_fg;
     }
 
-    FILE_LOG(logDEBUG) << "CMT::initialize() return";
+    //Now set the number of active points;
+    num_initial_keypoints = points_active.size();
+
+    //Now lets store the values of the images.
+    //Now we are using it to detect faces in the system;
+    //So let's store the inital face results and the inital face.
+
+    //That way the face recognition can be done in another function.
+
+    initialRect = rect;
+    imArchive = im_gray(rect);
+    pointsArchive.assign(points_fg.begin(), points_fg.end());
+    classesArchive.assign(classes_fg.begin(), classes_fg.end());
+
+    ////FILE_LOG(logDEBUG) << "CMT::initialize() return";
+    initialized = true;
+    counter = 3;
+    ratio_frames = 20;
 }
 
-void CMT::processFrame(Mat im_gray) {
+void CMT::updateArea(const Mat im_gray, const Rect rect)
+{
+    initialize(im_gray, rect, name, threshold);
+}
 
-    FILE_LOG(logDEBUG) << "CMT::processFrame() call";
+void CMT::set_name(string tracker_name)
+{
+    recognized_as = tracker_name;
+    identified = true;
+}
+
+void CMT::reset_decreasing_validate(int value)
+{
+    decreasing_validate = value;
+    initial_default = -value;
+}
+
+void CMT::processFrame(Mat im_gray, int threshold) {
+
+    ////FILE_LOG(logDEBUG) << "CMT::processFrame() call";
+    decreasing_validate--;
+
+    if(decreasing_validate == 0)
+    {
+            validated = false;
+    }
+    else if(decreasing_validate == initial_default)
+    {
+            tracker_lost = true;
+    }
 
     //Track keypoints
     vector<Point2f> points_tracked;
     vector<unsigned char> status;
-    tracker.track(im_prev, im_gray, points_active, points_tracked, status);
 
-    FILE_LOG(logDEBUG) << points_tracked.size() << " tracked points.";
+//    //TODO To avoid deleting faces that generated small number of thresholds.
+//    if(num_initial_keypoints < threshold * 2)
+//    {
+//        threshold = num_initial_keypoints / 2 ;
+//    }
+
+    //opticalflow_results =
+    tracker.track(im_prev, im_gray, points_active, points_tracked, status, threshold);
+
+    //If the optical flow results are below the threshold then go to the tracker_lost. That is decrease counter. For ten instance.
+//    std::cout<<"OpticalFlow Results: "<<opticalflow_results<<std::endl;
+//    if (!opticalflow_results)
+//    {
+//        if (threshold != 0)
+//        {
+//            //Now let's do some processing here.
+//            if (counter == 0)
+//            {
+//                tracker_lost = true;
+//               // return;
+//            }
+//            else
+//            {
+//                tracker_lost = false;
+//                counter--;
+//            }
+//
+//        }
+//    }
+
+    //FILE_LOG(logDEBUG) << points_tracked.size() << " tracked points.";
 
     //keep only successful classes
     vector<int> classes_tracked;
@@ -134,7 +210,7 @@ void CMT::processFrame(Mat im_gray) {
     vector<KeyPoint> keypoints;
     detector->detect(im_gray, keypoints);
 
-    FILE_LOG(logDEBUG) << keypoints.size() << " keypoints found.";
+    //FILE_LOG(logDEBUG) << keypoints.size() << " keypoints found.";
 
     Mat descriptors;
     descriptor->compute(im_gray, keypoints, descriptors);
@@ -144,58 +220,62 @@ void CMT::processFrame(Mat im_gray) {
     vector<int> classes_matched_global;
     matcher.matchGlobal(keypoints, descriptors, points_matched_global, classes_matched_global);
 
-    FILE_LOG(logDEBUG) << points_matched_global.size() << " points matched globally.";
+    //FILE_LOG(logDEBUG) << points_matched_global.size() << " points matched globally.";
 
     //Fuse tracked and globally matched points
     vector<Point2f> points_fused;
     vector<int> classes_fused;
     fusion.preferFirst(points_tracked, classes_tracked, points_matched_global, classes_matched_global,
-            points_fused, classes_fused);
+                       points_fused, classes_fused);
 
-    FILE_LOG(logDEBUG) << points_fused.size() << " points fused.";
+    //FILE_LOG(logDEBUG) << points_fused.size() << " points fused.";
 
     //Estimate scale and rotation from the fused points
     float scale;
     float rotation;
     consensus.estimateScaleRotation(points_fused, classes_fused, scale, rotation);
 
-    FILE_LOG(logDEBUG) << "scale " << scale << ", " << "rotation " << rotation;
+    //FILE_LOG(logDEBUG) << "scale " << scale << ", " << "rotation " << rotation;
 
     //Find inliers and the center of their votes
     Point2f center;
     vector<Point2f> points_inlier;
     vector<int> classes_inlier;
     consensus.findConsensus(points_fused, classes_fused, scale, rotation,
-            center, points_inlier, classes_inlier);
+                            center, points_inlier, classes_inlier);
 
-    FILE_LOG(logDEBUG) << points_inlier.size() << " inlier points.";
-    FILE_LOG(logDEBUG) << "center " << center;
+    //FILE_LOG(logDEBUG) << points_inlier.size() << " inlier points.";
+    //FILE_LOG(logDEBUG) << "center " << center;
 
     //Match keypoints locally
     vector<Point2f> points_matched_local;
     vector<int> classes_matched_local;
     matcher.matchLocal(keypoints, descriptors, center, scale, rotation, points_matched_local, classes_matched_local);
 
-    FILE_LOG(logDEBUG) << points_matched_local.size() << " points matched locally.";
+    //FILE_LOG(logDEBUG) << points_matched_local.size() << " points matched locally.";
+
+    //Assing the active points in the space.
 
     //Clear active points
     points_active.clear();
     classes_active.clear();
 
     //Fuse locally matched points and inliers
+
     fusion.preferFirst(points_matched_local, classes_matched_local, points_inlier, classes_inlier, points_active, classes_active);
 //    points_active = points_fused;
 //    classes_active = classes_fused;
-
-    FILE_LOG(logDEBUG) << points_active.size() << " final fused points.";
+    num_active_keypoints = points_active.size();
+    //FILE_LOG(logDEBUG) << points_active.size() << " final fused points.";
 
     //TODO: Use theta to suppress result
-    bb_rot = RotatedRect(center,  size_initial * scale, rotation/CV_PI * 180);
+    bb_rot = RotatedRect(center,  size_initial * scale, rotation / CV_PI * 180);
 
     //Remember current image
     im_prev = im_gray;
 
-    FILE_LOG(logDEBUG) << "CMT::processFrame() return";
+
+    //FILE_LOG(logDEBUG) << "CMT::processFrame() return";
 }
 
 } /* namespace CMT */
