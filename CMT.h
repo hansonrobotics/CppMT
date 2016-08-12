@@ -7,6 +7,8 @@
 #include "Fusion.h"
 #include "Matcher.h"
 #include "Tracker.h"
+#include "CTimer.h"
+
 #include <iostream>
 #include <opencv2/features2d/features2d.hpp>
 
@@ -18,19 +20,22 @@ using cv::Size2f;
 
 namespace cmt
 {
+struct cmt_timing{
+    double process_time;
+    double initialization_time;
+};
 
 class CMT
 {
 public:
-    CMT() : str_detector("FAST"), str_descriptor("BRISK"), initialized(false), name("unset") ,
-             identified(false), tracker_lost(false),validated(false),counter(5),decreasing_validate(500){};
+    CMT() : str_detector("FAST"), str_descriptor("BRISK"), identified(false), tracker_lost(false), initialized(false), validated(false), name("unset") ,
+              counter(5),decreasing_validate(500){};
     void initialize(const Mat im_gray, const Rect rect, string tracker_name, int threshold=50);
     void processFrame(const Mat im_gray,int threshold=30);
     void set_name(string recognized);
-
-    //Calls the intialize with the existing values. But maintains the previous values.
+    void reset_decreasing_validate(int value);
+    //Calls the intialize with the existing values. But maintains the previous attributes.
     void updateArea(const Mat im_gray, const Rect rect);
-
 
     Fusion fusion;
     Matcher matcher;
@@ -42,36 +47,31 @@ public:
 
     vector<Point2f> points_active; //public for visualization purposes
     RotatedRect bb_rot;
-	bool initialized;
-	string name;
-	//To get the same kind of ratio going in the system. 
-	int num_initial_keypoints; 
-	int num_active_keypoints; 
-    int threshold; 
-
-	//Removing the optical flow if elements are stopped. 
-	bool opticalflow_results;
-	bool identified;
-	bool tracker_lost;
-
 
     Mat imArchive;
     vector<Point2f>pointsArchive;
     vector<int>classesArchive;
-    Rect initialRect; 
+    Rect initialRect;
 
-    //This one holds how much frames we need to wait to discard a tracker from any state.
+	//Modification to the system
+	bool identified;
+	bool tracker_lost;
 
-
-    //TODO this is to enforce tracking the elements.
-    //This decreasing counter that resets to a initial counter when a ever a face is detected in the cmt track location.
-    string recognized_as;
-    void reset_decreasing_validate(int value);
+    bool initialized;
     bool validated;
+
+    string name;
+    string recognized_as;
+
+	int num_initial_keypoints;
+	int num_active_keypoints;
+    int threshold;
     int counter;
     int decreasing_validate;
     int initial_default;
     int ratio_frames;
+
+    cmt_timing times;
 private:
     Ptr<FeatureDetector> detector;
     Ptr<DescriptorExtractor> descriptor;

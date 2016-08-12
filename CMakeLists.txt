@@ -34,7 +34,7 @@ add_executable(cmt gui.cpp main.cpp)
 target_link_libraries(cmt cmtlib)
 
 install (TARGETS cmtlib DESTINATION lib)
-install (FILES CMT.h CMT_MAP.h common.h Matcher.h Tracker.h cwrapper.h gui.h Fusion.h Consensus.h DESTINATION include/)
+install (FILES CMT.h common.h Matcher.h Tracker.h cwrapper.h gui.h Fusion.h Consensus.h DESTINATION include/)
 install (FILES logging/log.h DESTINATION include/logging)
 install (FILES getopt/getopt.h DESTINATION include/getopt)
 install (FILES fastcluster/fastcluster.h DESTINATION include/fastcluster)

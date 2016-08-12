@@ -28,7 +28,7 @@ struct cmt_message{
     //This two are the opposite.
     bool validated;
     int before_being_demoted;
-
+    cmt_timing times; 
     Rect rect;
 };
 class CMTMAP
