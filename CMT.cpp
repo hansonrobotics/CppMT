@@ -149,7 +149,7 @@ void CMT::reset_decreasing_validate(int value)
     initial_default = -value;
 }
 
-void CMT::processFrame(Mat im_gray, int threshold) {
+void CMT::processFrame(Mat im_gray) {
     CTimer timer;
     timer.tic();
     ////FILE_LOG(logDEBUG) << "CMT::processFrame() call";

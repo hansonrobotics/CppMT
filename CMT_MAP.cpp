@@ -3,11 +3,10 @@
 namespace cmt {
 void CMTMAP::process(const Mat im_gray, const int factor,std::vector<string> string_)
 {
-    //TODO make this one a thread
  for(std::vector<std::string>::iterator v=string_.begin(); v!= string_.end();v++)
  {
     if(cmt_[*v].initialized)
-    cmt_[*v].processFrame(im_gray, factor);
+       cmt_[*v].processFrame(im_gray);
  }
 }
 std::vector<cmt_message> CMTMAP::process_map(const Mat im_gray, const double factor,std::map<std::string, std::string> merge, int frame_wait)
@@ -15,8 +14,12 @@ std::vector<cmt_message> CMTMAP::process_map(const Mat im_gray, const double fac
 std::vector<cmt_message> cmt_messages;
 queue_tracker.clear();
 
-separate();
+CTimer timer;
+timer.tic();
 
+
+separate();
+//TODO Is this doing it's job: Is it increasing the time taken to run the code.
 boost::thread thread_1 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_1);
 boost::thread thread_2 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_2);
 boost::thread thread_3 = boost::thread(&CMTMAP::process,this,im_gray, factor,string_3);
@@ -40,7 +43,7 @@ for(std::map<std::string, std::string>::iterator v = merge.begin(); v!= merge.en
 for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); v++)
 {
   cmt_message message;
-//  v->second.processFrame(im_gray, factor);
+//  v->second.processFrame(im_gray);
   message.initial_active_points = v->second.num_initial_keypoints;
   message.active_points = v->second.num_active_keypoints;
   message.tracker_name = v->second.name;
@@ -59,7 +62,7 @@ for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); 
   {
   message.tracker_lost = false;
   //std::cout<<"Frame Wait: "<<frame_wait<<std::endl;
-  v->second.ratio_frames = frame_wait; //TODO dynamic parameters.
+  v->second.ratio_frames = frame_wait;
   }
   else
   {
@@ -120,7 +123,8 @@ for(std::map<std::string, cmt::CMT>::iterator v = cmt_.begin(); v!= cmt_.end(); 
   cmt_messages.push_back(message);
 
 }
-
+double intitalization = timer.toc();
+std::cout<<"Time -> "<<intitalization<<std::endl;
 return cmt_messages;
 }
 int CMTMAP::size_map()

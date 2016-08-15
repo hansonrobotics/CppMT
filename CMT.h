@@ -31,11 +31,11 @@ public:
     CMT() : str_detector("FAST"), str_descriptor("BRISK"), identified(false), tracker_lost(false), initialized(false), validated(false), name("unset") ,
               counter(5),decreasing_validate(500){};
     void initialize(const Mat im_gray, const Rect rect, string tracker_name, int threshold=50);
-    void processFrame(const Mat im_gray,int threshold=30);
-    void set_name(string recognized);
-    void reset_decreasing_validate(int value);
+    void processFrame(const Mat im_gray);
+    void set_name(string recognized); //TODO this should be a feature in helper
+    void reset_decreasing_validate(int value);//TODO this should be a feature in helper
     //Calls the intialize with the existing values. But maintains the previous attributes.
-    void updateArea(const Mat im_gray, const Rect rect);
+    void updateArea(const Mat im_gray, const Rect rect);//TODO this should be a feature in helper
 
     Fusion fusion;
     Matcher matcher;
